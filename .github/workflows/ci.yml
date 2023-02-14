@@ -1,0 +1,42 @@
+# 以下以一个构建vue项目的yml文件为例子
+name: CI 
+on:
+  push:
+    branches:
+      - master # 这里只配置了main分支，所以只有推送main分支才会触发以下任务
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout  ️ # 将代码拉取到虚拟机
+        uses: actions/checkout@v3
+
+      # 添加缓存，逻辑和CI Workflow里的一样
+      - name: Cache
+        id: cache-dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{runner.OS}}-${{hashFiles('**/yarn.lock')}}
+
+      # 安装依赖。命中缓存则跳过此步
+      - name: Installing
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: eslint    # 安装依赖、打包，如果提前已打包好无需这一步
+        run: |
+          npm run lint
+
+      - name: Build   # 安装依赖、打包，如果提前已打包好无需这一步
+        run: |
+          npm run build
+
+      - name: Deploy   # 部署
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.TOKEN }}
+          publish_dir: ./dist
+          # branch: gh-pages # 部署后提交到那个分支
+          # folder: dist # 这里填打包好的目录名称
