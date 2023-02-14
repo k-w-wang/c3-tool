@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --base /tools",
     "preview": "vite preview",
     "lint": "lint-staged --allow-empty",
     "prepare": "husky install"
