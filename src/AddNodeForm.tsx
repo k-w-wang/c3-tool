@@ -13,22 +13,6 @@ const AddNodeForm: React.FC<{
 			...initData,
 		});
 	}, [initData]);
-	// {
-	//     "HopID": 18,
-	//     "NEID": 18001,
-	//     "Status": {
-	//       "CpuUsage": 2,
-	//       "MemUsage": 52,
-	//       "SocketBufferUsage": 0,
-	//       "UsedBandwidthIn": 2027,
-	//       "UsedBandwidthOut": 2057,
-	//       "TotalBandwidthIn": 5120000,
-	//       "TotalBandwidthOut": 5120000
-	//     },
-	//     "GroupID": 18,
-	//     "AreaNetwork": 1,
-	//     "CostLevel": 100
-	//   },
 
 	return (
 		<Form
@@ -57,7 +41,7 @@ const AddNodeForm: React.FC<{
 					},
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 			<Form.Item
 				label="NEID"
@@ -65,7 +49,7 @@ const AddNodeForm: React.FC<{
 				initialValue={17001}
 				rules={[{ required: true, message: "Please input your NEID!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 			<Form.Item
 				label="GroupID"
@@ -73,7 +57,7 @@ const AddNodeForm: React.FC<{
 				initialValue={17}
 				rules={[{ required: true, message: "Please input your GroupID!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 			<Form.Item
 				label="AreaNetwork"
@@ -81,7 +65,7 @@ const AddNodeForm: React.FC<{
 				initialValue={1}
 				rules={[{ required: true, message: "Please input your AreaNetwork!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 			<Form.Item
 				label="CostLevel"
@@ -89,7 +73,7 @@ const AddNodeForm: React.FC<{
 				initialValue={100}
 				rules={[{ required: true, message: "Please input your CostLevel!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -98,7 +82,7 @@ const AddNodeForm: React.FC<{
 				initialValue={3}
 				rules={[{ required: true, message: "Please input your CpuUsage!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -107,7 +91,7 @@ const AddNodeForm: React.FC<{
 				initialValue={25}
 				rules={[{ required: true, message: "Please input your MemUsage!" }]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 			<Form.Item
 				label="SocketBufferUsage"
@@ -117,7 +101,7 @@ const AddNodeForm: React.FC<{
 					{ required: true, message: "Please input your SocketBufferUsage!" },
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -128,7 +112,7 @@ const AddNodeForm: React.FC<{
 					{ required: true, message: "Please input your UsedBandwidthIn!" },
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -139,7 +123,7 @@ const AddNodeForm: React.FC<{
 					{ required: true, message: "Please input your UsedBandwidthOut!" },
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -150,7 +134,7 @@ const AddNodeForm: React.FC<{
 					{ required: true, message: "Please input your TotalBandwidthIn!" },
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item
@@ -161,7 +145,7 @@ const AddNodeForm: React.FC<{
 					{ required: true, message: "Please input your TotalBandwidthOut!" },
 				]}
 			>
-				<InputNumber controls={false} style={{ width: '100%' }}  />
+				<InputNumber controls={false} style={{ width: "100%" }} />
 			</Form.Item>
 
 			<Form.Item

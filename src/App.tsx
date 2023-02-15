@@ -3,13 +3,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import G6, { Graph, IG6GraphEvent, Item, ModelConfig } from "@antv/g6";
-import { Button, Drawer } from "antd";
+import G6, { Graph, IG6GraphEvent, Item } from "@antv/g6";
+import { Button, Drawer, Space, Upload, UploadProps } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import useModal from "./utils/useModal";
 import AddNodeForm from "./AddNodeForm";
 import AddEdgeForm from "./AddEdgeForm";
 import ContextMenu from "./contextMenu";
 import "./App.css";
+
+// 初始化导入的连线
+const formatEdges: (links: any[]) => any[] = (links) => {
+	return links.map((link, index) => {
+		return {
+			id: `edge${index + 1}`,
+			source: String(link.SrcHopID),
+			target: String(link.DstHopID),
+		};
+	});
+};
+
+// 初始化导入的node节点
+const formatNodes: (nodes: any) => any = (nodes) => {
+	return Object.keys(nodes).map((key) => {
+		return { id: String(nodes[key].HopID), label: nodes[key].HopID };
+	});
+};
+
+// formatEdges(initTopuData.topo.Link);
+// formatNodes(initTopuData.topo.Nodes);
 
 interface ClickPosition extends Record<string, unknown> {
 	x: number;
@@ -19,6 +41,8 @@ interface ClickPosition extends Record<string, unknown> {
 type NodeDatas = Record<string, Record<string, unknown>>;
 
 const App: React.FC = () => {
+	const [initJson, setInitData] = useState<any>();
+
 	const graphRef = useRef<Graph>();
 
 	const [activeConfig, setActiveConfig] = useState<{
@@ -32,9 +56,30 @@ const App: React.FC = () => {
 		[]
 	);
 
-	const nodeRef = useRef([]);
+	const nodeRef: any = useRef([]);
 
-	const edgeRef = useRef([]);
+	const edgeRef: any = useRef([]);
+
+	useEffect(() => {
+		if (initJson != null) {
+			nodeRef.current = formatNodes(initJson.topo.Nodes);
+			edgeRef.current = formatEdges(initJson.topo.Links);
+			setNodeDatas(initJson.topo.Nodes);
+			setEdgeDatas(() => {
+				return initJson.topo.Links.map((link: any, index: number) => {
+					return { id: `edge${index + 1}`, ...link };
+				});
+			});
+			const data = {
+				nodes: nodeRef.current,
+				edges: edgeRef.current,
+			};
+
+			graphRef.current?.data(data);
+
+			graphRef.current?.render();
+		}
+	}, [initJson]);
 
 	// 编辑node弹窗控制
 	const [nodeConfig, { showModal: showNodeModal, hideModal: hideNodeModal }] =
@@ -54,18 +99,6 @@ const App: React.FC = () => {
 	function editNode(id: string): void {
 		setActiveConfig({ type: "node", id });
 	}
-
-	// const container: Record<string, number> = {
-	// 	/* ... */
-	//   };
-	//   const a = ""
-	//   // Constant runtime lookups by string index
-	//   delete container.aaa;
-	//   delete container[a];
-
-	//   // Constants that must be accessed by []
-	//   delete container[7];
-	//   delete container['-Infinity'];
 
 	//  删除节点
 	function delNode(id: string): void {
@@ -112,7 +145,13 @@ const App: React.FC = () => {
 			container: "container",
 			width,
 			height,
-
+			// layout: {
+			// 	// Object，可选，布局的方法及其配置项，默认为 random 布局。
+			// 	type: "force", // 指定为力导向布局
+			// 	preventOverlap: true, // 防止节点重叠
+			// 	linkDistance: 200, // 指定边距离为100
+			// 	// nodeSize: 30        // 节点大小，用于算法中防止节点重叠时的碰撞检测。由于已经在上一节的元素配置中设置了每个节点的 size 属性，则不需要在此设置 nodeSize。
+			// },
 			// 边的样式
 			defaultEdge: {
 				style: {
@@ -125,15 +164,14 @@ const App: React.FC = () => {
 			defaultNode: {
 				type: "circle",
 				size: 30,
-
 				// label样式
-				labelCfg: {
-					position: "bottom",
-					offset: 5,
-					style: {
-						fill: "#eee",
-					},
-				},
+				// labelCfg: {
+				// 	// position: "",
+				// 	offset: 5,
+				// 	style: {
+				// 		fill: "#eee",
+				// 	},
+				// },
 			},
 
 			// linkCenter: true,
@@ -297,13 +335,16 @@ const App: React.FC = () => {
 						: undefined;
 				showNodeModal(title, data);
 			}
+
 			if (activeConfig.type === "edge") {
 				const gethopid: (type: string) => string | undefined = (type) => {
 					const edge = edgeRef.current.find(
 						(edge: any) => (edge.id as string) === activeConfig.id
 					);
-					return edge && nodeDatas[edge[type]].HopID;
+
+					return edge && nodeDatas[edge[type]]?.HopID;
 				};
+
 				const title =
 					activeConfig.id.length > 0
 						? `编辑边参数-${activeConfig.id}`
@@ -325,45 +366,6 @@ const App: React.FC = () => {
 		hideNodeModal();
 	};
 
-	console.log(123);
-
-	console.log(nodeDatas);
-
-	console.log(edgeDatas);
-
-	useEffect(() => {
-		console.log("nodeDatas", nodeDatas);
-		const Edges: Record<string, number[]> = {};
-
-		const Nodes: Record<string, unknown> = {};
-		for (const key in nodeDatas) {
-			if (Object.prototype.hasOwnProperty.call(nodeDatas, key)) {
-				const element = nodeDatas[key];
-				console.log(element);
-				Nodes[element.HopID as number] = element;
-				// Edges hopid与neid对应关系
-				if (Edges[element.NEID as string] == null) {
-					Edges[element.NEID as string] = [];
-				}
-				Edges[element.NEID as string].push(element.HopID as number);
-
-				console.log(Edges);
-			}
-		}
-
-		console.log(Nodes);
-	}, [nodeDatas]);
-
-	useEffect(() => {
-		const links: Array<Record<string, unknown>> = structuredClone(edgeDatas);
-
-		links.forEach((link) => {
-			Reflect.deleteProperty(link, "id");
-		});
-
-		console.log(links);
-	}, [edgeDatas]);
-
 	const hopIds = useMemo(() => {
 		const ids: string[] = [];
 		for (const key in nodeDatas) {
@@ -378,7 +380,6 @@ const App: React.FC = () => {
 	const saveJson: () => void = () => {
 		const exportJson: (name: string, data: unknown) => void = (name, data) => {
 			const blob = new Blob([data as BlobPart]);
-			console.log(blob);
 			const a = document.createElement("a");
 			a.href = URL.createObjectURL(blob);
 			a.download = name;
@@ -417,11 +418,11 @@ const App: React.FC = () => {
 
 		const pubhops: number[] = [];
 
-		const Link: Array<Record<string, unknown>> = structuredClone(edgeDatas);
+		const Links: Array<Record<string, unknown>> = structuredClone(edgeDatas);
 		const Edges: Record<string, number[]> = {};
 		const Nodes: Record<string, Record<string, unknown>> = {};
 
-		Link.forEach((link) => {
+		Links.forEach((link) => {
 			Reflect.deleteProperty(link, "id");
 		});
 
@@ -456,23 +457,45 @@ const App: React.FC = () => {
 			}
 		}
 
-		jsonData.topo = { Link, Edges, Nodes };
+		jsonData.topo = { Links, Edges, Nodes };
 		jsonData.calc_path_tree.pubedges = pubedges;
 		jsonData.calc_path_tree.subedges = subedges;
 		jsonData.calc_path_tree.pubhops = pubhops;
 
-		console.log(jsonData);
-
 		exportJson("json文件.json", JSON.stringify(jsonData, undefined, 2));
 	};
-
+	const props: UploadProps = {
+		accept: ".json",
+		showUploadList: false,
+		beforeUpload: async (file) => {
+			return await new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.readAsText(file, "utf-8");
+				reader.onload = () => {
+					setInitData(JSON.parse(reader.result as string));
+					reject(new Error("false"));
+				};
+				reject(new Error("false"));
+			});
+		},
+	};
 	return (
 		<>
-			<Button type="primary" onClick={saveJson}>
-				导出JSON
-			</Button>
+			<Space>
+				<Button type="primary" onClick={saveJson}>
+					导出JSON
+				</Button>
+				<Upload {...props}>
+					<Button type="primary" icon={<UploadOutlined />}>
+						导入JSON
+					</Button>
+				</Upload>
+			</Space>
 
-			<div id="container" style={{ width: "100%", height: "100vh" }}></div>
+			<div
+				id="container"
+				style={{ width: "100%", height: "calc(100vh - 32px)" }}
+			></div>
 
 			<Drawer
 				width={600}
