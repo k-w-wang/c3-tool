@@ -196,7 +196,7 @@ const App: React.FC = () => {
 								return false;
 							}
 
-							return !edgeRef.current.some((edge) => {
+							return !edgeRef.current.some((edge: any) => {
 								// @ts-ignore TODO
 								return edge.source === source && edge.target === target;
 							});
