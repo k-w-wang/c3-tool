@@ -4,13 +4,53 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import G6, { Graph, IG6GraphEvent, Item } from "@antv/g6";
-import { Button, Drawer, Space, Upload, UploadProps } from "antd";
+import { Button, Drawer, Space, Tag, Upload, UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import useModal from "./utils/useModal";
 import AddNodeForm from "./AddNodeForm";
 import AddEdgeForm from "./AddEdgeForm";
 import ContextMenu from "./contextMenu";
 import "./App.css";
+
+type StyleType = "pub" | "sub" | "pubsub" | "default";
+
+const nodeStyle = {
+	pub: {
+		stroke: "#52c41a",
+		fill: "#52c41a",
+	},
+	sub: {
+		stroke: "#ffec3d",
+		fill: "#ffec3d",
+	},
+	pubsub: {
+		stroke: "#4096ff",
+		fill: "#4096ff",
+	},
+	default: {
+		stroke: "#f9f0ff",
+		fill: "#f9f0ff",
+	},
+};
+
+function getStyleType({
+	isPub,
+	isSub,
+}: {
+	isPub: boolean | unknown;
+	isSub: boolean | unknown;
+}): StyleType {
+	if (isPub && isSub) {
+		return "pubsub";
+	} else {
+		if (isPub) {
+			return "pub";
+		} else if (isSub) {
+			return "sub";
+		}
+		return "default";
+	}
+}
 
 // 初始化导入的连线
 const formatEdges: (links: any[]) => any[] = (links) => {
@@ -24,10 +64,42 @@ const formatEdges: (links: any[]) => any[] = (links) => {
 };
 
 // 初始化导入的node节点
-const formatNodes: (nodes: any) => any = (nodes) => {
-	return Object.keys(nodes).map((key) => {
-		return { id: String(nodes[key].HopID), label: nodes[key].HopID };
+const formatNodes: (nodes: any, calcPathTree: any) => any = (
+	nodes,
+	calcPathTree
+) => {
+	const styleTypeWithId: Record<string, StyleType> = {};
+	const initNodes = Object.keys(nodes).map((key) => {
+		let type: StyleType = "default";
+		const isSub: boolean = calcPathTree.subedges.includes(nodes[key].NEID);
+
+		const isPub: boolean = calcPathTree.pubhops.includes(nodes[key].HopID);
+
+		if (
+			calcPathTree.subedges.includes(nodes[key].NEID) &&
+			calcPathTree.pubhops.includes(nodes[key].HopID)
+		) {
+			type = "pub";
+		}
+		if (isPub && isSub) {
+			type = "pubsub";
+		} else {
+			if (isPub) {
+				type = "pub";
+			} else if (isSub) {
+				type = "sub";
+			}
+		}
+		if (type !== "default") {
+			styleTypeWithId[nodes[key].HopID as string] = type;
+		}
+		return {
+			id: String(nodes[key].HopID),
+			label: nodes[key].HopID,
+			style: nodeStyle[type],
+		};
 	});
+	return [initNodes, styleTypeWithId];
 };
 
 // formatEdges(initTopuData.topo.Link);
@@ -62,14 +134,41 @@ const App: React.FC = () => {
 
 	useEffect(() => {
 		if (initJson != null) {
-			nodeRef.current = formatNodes(initJson.topo.Nodes);
+			const [nodes, styleTypeWithId] = formatNodes(
+				initJson.topo.Nodes,
+				initJson.calc_path_tree
+			);
+
+			nodeRef.current = nodes;
 			edgeRef.current = formatEdges(initJson.topo.Links);
+
+			console.log(styleTypeWithId);
+			console.log(initJson.topo.Nodes);
+
+			for (const key in styleTypeWithId) {
+				if (Object.prototype.hasOwnProperty.call(styleTypeWithId, key)) {
+					const element = styleTypeWithId[key];
+					if (element === "pubsub") {
+						initJson.topo.Nodes[key].isPub = true;
+						initJson.topo.Nodes[key].isSub = true;
+					} else {
+						if (element === "pub") {
+							initJson.topo.Nodes[key].isPub = true;
+						} else if (element === "sub") {
+							initJson.topo.Nodes[key].isSub = true;
+						}
+					}
+				}
+			}
+
 			setNodeDatas(initJson.topo.Nodes);
+
 			setEdgeDatas(() => {
 				return initJson.topo.Links.map((link: any, index: number) => {
 					return { id: `edge${index + 1}`, ...link };
 				});
 			});
+
 			const data = {
 				nodes: nodeRef.current,
 				edges: edgeRef.current,
@@ -257,7 +356,25 @@ const App: React.FC = () => {
 	const getNodeFormValues: (values: Record<string, unknown>) => void = (
 		values
 	) => {
+		const styleType = getStyleType({
+			isPub: values.isPub,
+			isSub: values.isSub,
+		});
 		if (nodeConfig.data.id != null) {
+			if (
+				nodeDatas[nodeConfig.data.id as string].isPub !== values.isPub ||
+				nodeDatas[nodeConfig.data.id as string].isSub !== values.isSub
+			) {
+				graphRef.current?.update(
+					nodeConfig.data.id as string,
+					{
+						style: nodeStyle[styleType],
+					},
+					true
+				);
+
+				nodeRef.current = graphRef.current?.save().nodes as [];
+			}
 			setNodeDatas((prevState) => {
 				return { ...prevState, [nodeConfig.data.id as string]: values };
 			});
@@ -266,6 +383,7 @@ const App: React.FC = () => {
 				x: nodeConfig.data.x,
 				y: nodeConfig.data.y,
 				label: values?.HopID as string,
+				style: nodeStyle[styleType],
 			}) as Item;
 
 			nodeRef.current = graphRef.current?.save().nodes as [];
@@ -385,9 +503,10 @@ const App: React.FC = () => {
 			a.download = name;
 			a.click();
 		};
-		const jsonData = {
+
+		const jsonData = initJson || {
 			level: "debug",
-			ts: "2022-09-22T06:56:58.901Z",
+			ts: "2022-09-22T04:56:58.901Z",
 			caller: "nemng/pathtree_calc.go:321",
 			msg: "pathTreeCalc_CalcPathtree",
 			traceid: "6b74b015e955a217",
@@ -396,13 +515,13 @@ const App: React.FC = () => {
 			calc_path_tree: {
 				channelid: 100,
 				streamid: 100,
-				pubedges: [17001, 18001],
-				subedges: [17001, 19001],
+				pubedges: [],
+				subedges: [],
 				bandwidth_req: 0,
 				qoslevel: 0,
 				channelname: "wl_test",
 				streamname: "wl_test",
-				pubhops: [17, 18],
+				pubhops: [],
 			},
 			topo: {},
 			qos: {
@@ -479,9 +598,15 @@ const App: React.FC = () => {
 			});
 		},
 	};
+
+	console.log(nodeRef);
+
 	return (
 		<>
 			<Space>
+				<Tag color="#4096ff">pub/sub</Tag>
+				<Tag color="#52c41a">pub</Tag>
+				<Tag color="#ffec3d">sub</Tag>
 				<Button type="primary" onClick={saveJson}>
 					导出JSON
 				</Button>
