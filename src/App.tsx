@@ -4,13 +4,14 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import G6, { Graph, IG6GraphEvent, Item } from "@antv/g6";
-import { Button, Drawer, Space, Tag, Upload, UploadProps } from "antd";
+import { Button, Drawer, Modal, Space, Tag, Upload, UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import useModal from "./utils/useModal";
 import AddNodeForm from "./AddNodeForm";
 import AddEdgeForm from "./AddEdgeForm";
 import ContextMenu from "./contextMenu";
 import "./App.css";
+import showModal from "./showModal";
 
 type StyleType = "pub" | "sub" | "pubsub" | "default";
 
@@ -71,16 +72,10 @@ const formatNodes: (nodes: any, calcPathTree: any) => any = (
 	const styleTypeWithId: Record<string, StyleType> = {};
 	const initNodes = Object.keys(nodes).map((key) => {
 		let type: StyleType = "default";
-		const isSub: boolean = calcPathTree.subedges.includes(nodes[key].NEID);
-
 		const isPub: boolean = calcPathTree.pubhops.includes(nodes[key].HopID);
 
-		if (
-			calcPathTree.subedges.includes(nodes[key].NEID) &&
-			calcPathTree.pubhops.includes(nodes[key].HopID)
-		) {
-			type = "pub";
-		}
+		const isSub: boolean = calcPathTree.subedges.includes(nodes[key].NEID);
+
 		if (isPub && isSub) {
 			type = "pubsub";
 		} else {
@@ -132,8 +127,32 @@ const App: React.FC = () => {
 
 	const edgeRef: any = useRef([]);
 
+	const jsonRef = useRef<any>();
+
+	function getStyleTypeWithHopId(HopId: string): StyleType {
+		const nodeinfo = jsonRef.current?.topo.Nodes[HopId];
+		if (!(nodeinfo != null)) {
+			return "default";
+		}
+		const isPub: boolean = jsonRef.current?.calc_path_tree.pubhops.includes(
+			nodeinfo.HopID
+		);
+
+		const isSub: boolean = jsonRef.current?.calc_path_tree.subedges.includes(
+			nodeinfo.NEID
+		);
+
+		const styleType = getStyleType({
+			isPub,
+			isSub,
+		});
+		return styleType;
+	}
+
 	useEffect(() => {
 		if (initJson != null) {
+			jsonRef.current = initJson;
+
 			const [nodes, styleTypeWithId] = formatNodes(
 				initJson.topo.Nodes,
 				initJson.calc_path_tree
@@ -580,7 +599,7 @@ const App: React.FC = () => {
 		jsonData.calc_path_tree.pubedges = pubedges;
 		jsonData.calc_path_tree.subedges = subedges;
 		jsonData.calc_path_tree.pubhops = pubhops;
-
+		jsonRef.current = jsonData;
 		exportJson("json文件.json", JSON.stringify(jsonData, undefined, 2));
 	};
 	const props: UploadProps = {
@@ -592,6 +611,53 @@ const App: React.FC = () => {
 				reader.readAsText(file, "utf-8");
 				reader.onload = () => {
 					setInitData(JSON.parse(reader.result as string));
+					reject(new Error("false"));
+				};
+				reject(new Error("false"));
+			});
+		},
+	};
+	const resultProps: UploadProps = {
+		accept: ".json",
+		showUploadList: false,
+		beforeUpload: async (file) => {
+			return await new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.readAsText(file, "utf-8");
+				reader.onload = () => {
+					const result: any = JSON.parse(reader.result as string);
+					const jsonData = jsonRef.current;
+					const nodes: Array<{ id: string; label: string; style: any }> = [];
+					const edges: Array<{
+						source: string;
+						target: string;
+						label: string;
+					}> = [];
+
+					console.log(result);
+					console.log(jsonData);
+					console.log(result.PathTreePairs);
+
+					result.PathTreePairs.forEach((item: any) => {
+						const styleType = getStyleTypeWithHopId(item.root_hopid);
+
+						nodes.push({
+							id: String(item.root_hopid),
+							label: String(item.root_hopid),
+							style: nodeStyle[styleType],
+						});
+
+						item.child_hopids.forEach((childItem: any, index: any) => {
+							edges.push({
+								source: String(item.root_hopid),
+								target: String(childItem),
+								label: String(item.rankings[index]),
+							});
+						});
+					});
+
+					showModal({ nodes, edges });
+
 					reject(new Error("false"));
 				};
 				reject(new Error("false"));
@@ -613,6 +679,11 @@ const App: React.FC = () => {
 				<Upload {...props}>
 					<Button type="primary" icon={<UploadOutlined />}>
 						导入JSON
+					</Button>
+				</Upload>
+				<Upload {...resultProps}>
+					<Button type="primary" icon={<UploadOutlined />}>
+						查看结果
 					</Button>
 				</Upload>
 			</Space>

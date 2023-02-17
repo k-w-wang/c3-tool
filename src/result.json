@@ -1,0 +1,25 @@
+{
+	"PathTreePairs": [
+		{
+			"root_hopid": 11,
+			"child_hopids": [25, 7, 41, 40, 46],
+			"rankings": [0, 7, 7, 5, 3]
+		},
+		{ "root_hopid": 25, "child_hopids": [], "rankings": [] },
+		{ "root_hopid": 12, "child_hopids": [], "rankings": [] },
+		{
+			"root_hopid": 7,
+			"child_hopids": [12, 40, 46],
+			"rankings": [0, 7, 7]
+		},
+		{ "root_hopid": 40, "child_hopids": [], "rankings": [] },
+		{ "root_hopid": 46, "child_hopids": [], "rankings": [] },
+		{
+			"root_hopid": 41,
+			"child_hopids": [12, 40, 46],
+			"rankings": [4, 7, 0]
+		}
+	],
+	"RootHopIDs": { "11001": 11, "25002": 40, "34001": 46 },
+	"Child": null
+}
