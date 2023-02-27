@@ -72,9 +72,9 @@ const formatNodes: (nodes: any, calcPathTree: any) => any = (
 	const styleTypeWithId: Record<string, StyleType> = {};
 	const initNodes = Object.keys(nodes).map((key) => {
 		let type: StyleType = "default";
-		const isPub: boolean = calcPathTree.pubhops.includes(nodes[key].HopID);
+		const isPub: boolean = calcPathTree.pubhops?.includes(nodes[key].HopID);
 
-		const isSub: boolean = calcPathTree.subedges.includes(nodes[key].NEID);
+		const isSub: boolean = calcPathTree.subedges?.includes(nodes[key].NEID);
 
 		if (isPub && isSub) {
 			type = "pubsub";
