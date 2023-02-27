@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import G6, { Graph, IG6GraphEvent, Item } from "@antv/g6";
-import { Button, Drawer, Modal, Space, Tag, Upload, UploadProps } from "antd";
+import { Button, Drawer, Space, Tag, Upload, UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import useModal from "./utils/useModal";
 import AddNodeForm from "./AddNodeForm";
@@ -88,9 +88,17 @@ const formatNodes: (nodes: any, calcPathTree: any) => any = (
 		if (type !== "default") {
 			styleTypeWithId[nodes[key].HopID as string] = type;
 		}
+		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+		let label: string = nodes[key].HopID;
+		if (nodes[key].NEID) {
+			label = `${label}\n(${nodes[key].NEID as string})`;
+		}
+
+		console.log(label);
+
 		return {
 			id: String(nodes[key].HopID),
-			label: nodes[key].HopID,
+			label,
 			style: nodeStyle[type],
 		};
 	});
@@ -281,7 +289,7 @@ const App: React.FC = () => {
 			// 默认节点样式
 			defaultNode: {
 				type: "circle",
-				size: 30,
+				size: 45,
 				// label样式
 				// labelCfg: {
 				// 	// position: "",
@@ -398,10 +406,14 @@ const App: React.FC = () => {
 				return { ...prevState, [nodeConfig.data.id as string]: values };
 			});
 		} else {
+			let label: string = values?.HopID as string;
+			if (values?.NEID) {
+				label = `${label}\n(${values?.NEID as string})`;
+			}
 			const item = graphRef.current?.addItem("node", {
 				x: nodeConfig.data.x,
 				y: nodeConfig.data.y,
-				label: values?.HopID as string,
+				label,
 				style: nodeStyle[styleType],
 			}) as Item;
 
