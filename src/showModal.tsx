@@ -46,6 +46,7 @@ const showModal: ({ nodes, edges }: { nodes: any; edges: any }) => void = ({
 							container: "result",
 							width,
 							height,
+							fitView: true,
 							layout,
 							// 边的样式
 							defaultEdge: {
@@ -184,7 +185,11 @@ const showModal: ({ nodes, edges }: { nodes: any; edges: any }) => void = ({
 			>
 				<div
 					id="result"
-					style={{ width: "100%", height: "calc(60vh - 32px)" }}
+					style={{
+						width: "100%",
+						height: "calc(70vh - 32px)",
+						maxHeight: 1000,
+					}}
 				></div>
 			</Modal>
 		);
