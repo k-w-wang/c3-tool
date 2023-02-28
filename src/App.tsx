@@ -2,7 +2,13 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import G6, { Graph, IG6GraphEvent, Item } from "@antv/g6";
 import { Button, Drawer, Space, Tag, Upload, UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
@@ -12,6 +18,7 @@ import AddEdgeForm from "./AddEdgeForm";
 import ContextMenu from "./contextMenu";
 import "./App.css";
 import showModal from "./showModal";
+import { throttle } from "./utils/throttle";
 
 type StyleType = "pub" | "sub" | "pubsub" | "default";
 
@@ -646,16 +653,22 @@ const App: React.FC = () => {
 						label: string;
 					}> = [];
 
-					console.log(result);
-					console.log(jsonData);
-					console.log(result.PathTreePairs);
-
 					result.PathTreePairs.forEach((item: any) => {
 						const styleType = getStyleTypeWithHopId(item.root_hopid);
 
+						let label: string = item.root_hopid;
+
+						if (jsonData.topo?.Nodes[item.root_hopid]?.NEID) {
+							label = `${label}\n(${
+								jsonData.topo.Nodes[item.root_hopid].NEID as string
+							})`;
+						}
+
+						console.log(label);
+
 						nodes.push({
 							id: String(item.root_hopid),
-							label: String(item.root_hopid),
+							label,
 							style: nodeStyle[styleType],
 						});
 
@@ -678,6 +691,29 @@ const App: React.FC = () => {
 	};
 
 	console.log(nodeRef);
+
+	useLayoutEffect(() => {
+		console.log("useLayoutEffect");
+	}, []);
+
+	useEffect(() => {
+		const onResize = throttle(() => {
+			const container = document.getElementById("container") as HTMLElement;
+			if (container) {
+				const width = container.clientWidth;
+				const height =
+					container.clientHeight !== 0 ? container.clientHeight : 500;
+
+				graphRef.current?.changeSize(width, height);
+				graphRef.current?.fitView(20);
+			}
+		}, 20);
+
+		window.addEventListener("resize", onResize);
+		return () => {
+			window.removeEventListener("resize", onResize);
+		};
+	}, []);
 
 	return (
 		<>

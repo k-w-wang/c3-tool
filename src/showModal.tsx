@@ -4,6 +4,7 @@ import G6 from "@antv/g6";
 import { Modal } from "antd";
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
+import { throttle } from "./utils/throttle";
 import useModal from "./utils/useModal";
 
 const container = (function () {
@@ -57,7 +58,7 @@ const showModal: ({ nodes, edges }: { nodes: any; edges: any }) => void = ({
 							// 默认节点样式
 							defaultNode: {
 								type: "circle",
-								size: 30,
+								size: 45,
 								// label样式
 								// labelCfg: {
 								// 	// position: "",
