@@ -690,12 +690,6 @@ const App: React.FC = () => {
 		},
 	};
 
-	console.log(nodeRef);
-
-	useLayoutEffect(() => {
-		console.log("useLayoutEffect");
-	}, []);
-
 	useEffect(() => {
 		const onResize = throttle(() => {
 			const container = document.getElementById("container") as HTMLElement;

@@ -71,7 +71,7 @@ const showModal: ({ nodes, edges }: { nodes: any; edges: any }) => void = ({
 							},
 							modes: {
 								// Defualt mode
-								default: ["drag-canvas", "zoom-canvas"],
+								default: ["drag-canvas", "zoom-canvas", "drag-node"],
 							},
 
 							// linkCenter: true,
